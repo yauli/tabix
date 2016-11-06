@@ -97,10 +97,10 @@ int reheader_file(const char *header, const char *file, int meta)
 
 int main(int argc, char *argv[])
 {
-	int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0;
+	int c, skip = -1, meta = -1, list_chrms = 0, force = 0, print_header = 0, print_only_header = 0, bed_reg = 0, bed_comp = 0, discard_found = 0, filter_table = 0;
 	ti_conf_t conf = ti_conf_gff, *conf_ptr = NULL;
     const char *reheader = NULL;
-	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhHfCBr:")) >= 0) {
+	while ((c = getopt(argc, argv, "p:s:b:e:0S:c:lhFDHfCBr:")) >= 0) {
 		switch (c) {
 		case 'B': bed_reg = 1; break;
 		case 'C': bed_comp = bed_reg = 1; break;
@@ -126,6 +126,8 @@ int main(int argc, char *argv[])
         case 'H': print_only_header = 1; break;
 		case 'f': force = 1; break;
         case 'r': reheader = optarg; break;
+        case 'F': filter_table = 1; bed_reg = 1; break;
+        case 'D': discard_found = 1; break;
 		}
 	}
 	if (optind == argc) {
@@ -146,6 +148,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "         -H         print only the header lines\n");
 		fprintf(stderr, "         -l         list chromosome names\n");
 		fprintf(stderr, "         -f         force to overwrite the index\n");
+        fprintf(stderr, "         -F         filter a table, which will print table lines which can be found in <in.tab.bgz> file\n");
+        fprintf(stderr, "         -D         along with -F, when -D opens, table lines which cannot be found in <in.tab.bgz> will be printed\n");
 		fprintf(stderr, "\n");
 		return 1;
 	}
@@ -294,7 +298,7 @@ int main(int argc, char *argv[])
                 ti_iter_destroy(iter);
                 bgzf_seek(t->fp, 0, SEEK_SET);
             }
-			if (bed_reg) {
+			if (bed_reg && !filter_table) {
 				extern int bed_overlap(const void *_h, const char *chr, int beg, int end);
 				extern void *bed_read(const char *fn);
 				extern void bed_destroy(void *_h);
@@ -321,7 +325,46 @@ int main(int argc, char *argv[])
 				}
                 ti_iter_destroy(iter);
 				bed_destroy(bed);
-			} else {
+			} else if(bed_reg && filter_table){
+                FILE *fp;
+                char buf[201];
+                fp = fopen(argv[optind + 1], "r");
+                while(fgets(buf, sizeof(buf), fp)){
+                    char *part = NULL;
+                    char query_str[80];
+                    char tmp[201];
+                    int tid, beg, end, flag = 0;
+                    strcpy(tmp, buf);
+                    part = strtok(tmp, "\t");
+                    
+                    for(int i = 0; i < 3; i++){
+                        switch(i){
+                            case 0: strcat(query_str, part);strcat(query_str, ":");part = strtok( NULL, "\t" );break;
+                            case 1: strcat(query_str, part);strcat(query_str, "-");part = strtok( NULL, "\t" );break;
+                            case 2: strcat(query_str, part);break;
+                        }
+                    }
+                    
+					if (ti_parse_region(t->idx, query_str, &tid, &beg, &end) == 0) {
+						iter = ti_queryi(t, tid, beg, end);
+						while ((s = ti_read(t, iter, &len)) != 0) {
+                            flag = 1;//hitted
+							//fputs(s, stdout); fputc('\n', stdout);
+						}
+						ti_iter_destroy(iter);
+					}
+                    if (discard_found && !flag){
+                        fputs(buf, stdout);
+                    }else if (!discard_found && flag){
+                        fputs(buf, stdout);
+                    }
+                    
+                    memset(query_str, 0, strlen(query_str));
+                    flag = 0;
+                }
+                
+                fclose(fp);
+            } else {
 				for (i = optind + 1; i < argc; ++i) {
 					int tid, beg, end;
 					if (ti_parse_region(t->idx, argv[i], &tid, &beg, &end) == 0) {
