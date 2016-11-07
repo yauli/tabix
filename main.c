@@ -333,11 +333,11 @@ int main(int argc, char *argv[])
                     char *part = NULL;
                     char query_str[1024];
                     char tmp[1024];
-                    int tid, beg, end, flag = 0;
+                    int tid, beg, end, i, flag = 0;
                     strcpy(tmp, buf);
                     part = strtok(tmp, "\t");
                     
-                    for(int i = 0; i < 3; i++){
+                    for(i = 0; i < 3; i++){
                         switch(i){
                             case 0: strcat(query_str, part);strcat(query_str, ":");part = strtok( NULL, "\t" );break;
                             case 1: strcat(query_str, part);strcat(query_str, "-");part = strtok( NULL, "\t" );break;
