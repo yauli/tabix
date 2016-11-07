@@ -8,18 +8,18 @@ Tabix indexes a TAB-delimited genome position file in.tab.bgz and creates an ind
 Add swithes which can filter positions of a input table according to specific annotations indexed by tabix tool. The word "filter" means that you can keep those matched lines or discard those matched lines.
 
 ## Options
--p STR     preset: gff, bed, sam, vcf, psltbl [gff]
--s INT     sequence name column [1]
--b INT     start column [4]
--e INT     end column; can be identical to '-b' [5]
--S INT     skip first INT lines [0]
--c CHAR    symbol for comment/meta lines [#]
--r FILE    replace the header with the content of FILE [null]
--B         region1 is a BED file (entire file will be read)
--0         zero-based coordinate
--h         print also the header lines
--H         print only the header lines
--l         list chromosome names
--f         force to overwrite the index
--F         filter a table, which will print table lines which can be found in <in.tab.bgz> file to stdout
--D         along with -F, when -D opens, table lines which cannot be found in <in.tab.bgz> will be printed to stdout
+- -p STR     preset: gff, bed, sam, vcf, psltbl [gff]
+- -s INT     sequence name column [1]
+- -b INT     start column [4]
+- -e INT     end column; can be identical to '-b' [5]
+- -S INT     skip first INT lines [0]
+- -c CHAR    symbol for comment/meta lines [#]
+- -r FILE    replace the header with the content of FILE [null]
+- -B         region1 is a BED file (entire file will be read)
+- -0         zero-based coordinate
+- -h         print also the header lines
+- -H         print only the header lines
+- -l         list chromosome names
+- -f         force to overwrite the index
+- -F         filter a table, which will print table lines which can be found in <in.tab.bgz> file to stdout
+- -D         along with -F, when -D opens, table lines which cannot be found in <in.tab.bgz> will be printed to stdout
